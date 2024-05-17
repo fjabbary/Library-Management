@@ -54,3 +54,8 @@ class NonFictionBook(Book):
         self.__genre = 'Non-Fiction'
         self.__sub_genre = sub_genre
           
+  def get_genre(self):
+    return self.__genre
+  
+  def get_sub_genre(self):
+    return self.__sub_genre
