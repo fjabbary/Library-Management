@@ -7,7 +7,7 @@ def main():
 
     while True:
         
-        print("\n1. Add Book \n2. Display books \n3. Checkout Book \n4. Checkin Book \n5. Add User \n6. Display Users ")
+        print("\n1. Add Book \n2. Display books \n3. Checkout Book \n4. Checkin Book \n5. Add User \n6. Display Users \n7. Display Borrowers \n8. Search Book ")
         choice = input("Enter your choice: ")
         
         try: 
@@ -25,6 +25,9 @@ def main():
                 library.display_users()        
             elif choice == "7":
                 library.display_borrower_users()  
+            elif choice == "8":
+                library.search_book()    
+                
             elif choice == "":
                 print("Thanks for supporting your public Library! Have a nice day :)")
                 break

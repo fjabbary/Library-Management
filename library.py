@@ -77,7 +77,7 @@ class Library:
   def display_books(self):
     for isbn, book in self.books.items():
       if isinstance(book, FictionBook) or isinstance(book, NonFictionBook):
-          print("\033[92m", {
+          print("\033[92m", {  
             isbn: {
                 'title': book.get_title(),
                 'author': book.get_author(),
@@ -138,11 +138,57 @@ class Library:
     
 
 
-
-
-
-
-
+  def search_book(self):
+    
+    search_criteria = input("Do you want to search based on 'isbn' or 'title'? ")
+    if search_criteria == 'isbn':
+      isbn = input("Enter the ISBN of the book you are looking for: ")
+      found_book = self.books[isbn]
+      if isinstance(found_book, FictionBook) or isinstance(found_book, NonFictionBook):
+        print("\033[92m",{
+          'title': found_book.get_title(),
+                  'author': found_book.get_author(),
+                  'ISBN': found_book.get_isbn(),
+                  'publication_date': found_book.get_publication_date(),
+                  'is_available': found_book.get_is_available(),
+                  'genre': found_book.get_genre(),  
+                  'sub_genre': found_book.get_sub_genre()
+        }, "\033[0m")
+      else:
+          print("\033[92m",{
+          'title': found_book.get_title(),
+                  'author': found_book.get_author(),
+                  'ISBN': found_book.get_isbn(),
+                  'publication_date': found_book.get_publication_date(),
+                  'is_available': found_book.get_is_available(),
+                  'genre': '',  
+                  'sub_genre': ''
+        }, "\033[0m")
+      
+    elif search_criteria == 'title':
+      title = input("Enter the title of the book you are looking for: ")
+      for book in self.books.values():
+        if book.get_title() == title:
+          if isinstance(book, FictionBook) or isinstance(book, NonFictionBook):
+            print("\033[92m",{
+                  'title': book.get_title(),
+                  'author': book.get_author(),
+                  'ISBN': book.get_isbn(),
+                  'publication_date': book.get_publication_date(),
+                  'is_available': book.get_is_available(),
+                  'genre': book.get_genre(),  
+                  'sub_genre': book.get_sub_genre()
+              }, "\033[0m")
+          else:
+            print("\033[92m",{
+                  'title': book.get_title(),
+                  'author': book.get_author(),
+                  'ISBN': book.get_isbn(),
+                  'publication_date': book.get_publication_date(),
+                  'is_available': book.get_is_available(),
+                  'genre': '',  
+                  'sub_genre': ''
+              }, "\033[0m")
 
 
 
