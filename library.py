@@ -1,4 +1,4 @@
-import uuid, json, ast, re
+import ast, re
 from datetime import datetime
 
 from book import Book, FictionBook, NonFictionBook
@@ -190,7 +190,35 @@ class Library:
                   'sub_genre': ''
               }, "\033[0m")
 
+  def display_available_genres(self):
+    """Displays all available sub-genres related to the books in the library."""
+    # Book class does not have genre property
+    # FictionBook and NonFictionBook have sub_genre 
+    sub_genres = []
+    for book in self.books.values():
+       if isinstance(book, FictionBook) or isinstance(book, NonFictionBook):
+         sub_genres.append(book.get_sub_genre())
+    print(f"Available Genres: {sub_genres}")
+    
+
+# Adding and displaying author should be similar to user
 
 
+  #export data in the formats of text and JSON
+  def export_data(self):
+    with open('books.txt', 'w') as file:
+        for isbn, book in self.books.items():
+              data = { 'title': book.get_title(), 'author': book.get_author(), 'isbn': book.get_isbn(),  'publication_date': book.get_publication_date(), 'is_available': book.get_is_available()}
+              
+              file.write(f"'{isbn}': {data}\n")
+   
 
-# id = str(uuid.uuid4())
+  def import_data(self):
+    
+    with open('books.txt', 'r') as file:
+       data = file.read()
+ 
+       my_dict = ast.literal_eval(data)
+       self.books.update(my_dict)
+         
+

@@ -26,7 +26,13 @@ def main():
             elif choice == "7":
                 library.display_borrower_users()  
             elif choice == "8":
-                library.search_book()    
+                library.search_book() 
+            elif choice == "9":
+                library.display_available_genres()   
+            elif choice == "10":
+                library.export_data()
+            elif choice == "11":
+                library.import_data()         
                 
             elif choice == "":
                 print("Thanks for supporting your public Library! Have a nice day :)")
