@@ -1,15 +1,17 @@
-import ast, re
+import ast, re, json, os
 from datetime import datetime
+import pickle
 
-from book import Book, FictionBook, NonFictionBook
+from book import Book
 from user import User
 from author import Author
 
 class Library:
   def __init__(self):
     self.books = {}
-    self.users = {}  #{'32': {'32', 'farzin', borrowed_books = []}, '33': {'33', 'james'} }
+    self.users = {}  
     self.authors = {}
+    self.genres = {}
     self.current_loans = {}
     
   def add_user(self):
@@ -42,64 +44,45 @@ class Library:
       
     
   def add_book(self):
-    
     title = input("Enter the title of the book: ")
     author = input("Enter the author of the book: ")
     isbn = input("Enter the ISBN number of the book: ")
     publication_date = input("Enter the publication date in the format of MM/DD/YYYY: ")
-    genre = input("Enter the genre of the book. Type 'fiction', 'non-fiction' or 'none': ")
-    sub_genre = input("Enter the sub-genre of the book: ")
+    genre = input("Enter the genre of the book: ")
     
-    string_regex = r"[a-zA-Z0-9]{3,}"
+    string_regex = r"[a-zA-Z0-9 .]{3,}"
     date_regex = r"\d{2}/\d{2}/\d{3,4}"
-    # For simplicity of creation of a book data, no regex validation is used for ISBN (ISBN-13 digits)
-    # Concatenate string to check re.match() with multiple strings
+    # For simplicity of creation of a book data in cli, no regex validation is used for ISBN (ISBN-13 digits)
     valid_title = re.match(string_regex, title)
     valid_author = re.match(string_regex, author)
     valid_date = re.match(date_regex, publication_date) 
     
     if valid_title and valid_author and valid_date:
-       if genre == "fiction":
-          new_book = FictionBook(title, author, isbn, publication_date, sub_genre)
+          new_book = Book(title, author, isbn, publication_date, genre)
           self.books[isbn] = new_book
+          print("\033[92m", "Book added successfully!", "\033[0m")
       
-       elif genre == "non-fiction":
-          new_book = NonFictionBook(title, author, isbn, publication_date, sub_genre)
-          self.books[isbn] = new_book
-       else:
-          new_book = Book(title, author, isbn, publication_date)
-          self.books[isbn] = new_book
-    
     else:
-      print("\033[31m", "Book title, author, genre, and subgenre has to be at least 3 characters and date has to be in valid format and refers to the past date", '\033[0m')
+      print("\033[31m", "Book title, author have to be at least 3 characters and date has to be in valid format and refers to the past date", '\033[0m')
        
 
   def display_books(self):
+    output = {}
     for isbn, book in self.books.items():
-      if isinstance(book, FictionBook) or isinstance(book, NonFictionBook):
-          print("\033[92m", {  
+          one_book = {  
             isbn: {
                 'title': book.get_title(),
                 'author': book.get_author(),
                 'ISBN': book.get_isbn(),
                 'publication_date': book.get_publication_date(),
                 'is_available': book.get_is_available(),
-                'genre': book.get_genre(),  
-                'sub_genre': book.get_sub_genre()
+                'genre': book.get_genre()
             }
-              },"\033[0m")
-      else:
-        print("\033[92m",{
-            isbn: {
-                'title': book.get_title(),
-                'author': book.get_author(),
-                'ISBN': book.get_isbn(),
-                'publication_date': book.get_publication_date(),
-                'is_available': book.get_is_available(),
-                'genre': '',  
-                'sub_genre': ''  
-            }
-              },"\033[0m")
+          }
+          output.update(one_book)
+          
+    print("\033[92m",json.dumps(output, indent=4, sort_keys=True), "\033[0m")
+     
         
 
   def checkout_book(self):
@@ -139,86 +122,83 @@ class Library:
 
 
   def search_book(self):
-    
     search_criteria = input("Do you want to search based on 'isbn' or 'title'? ")
     if search_criteria == 'isbn':
       isbn = input("Enter the ISBN of the book you are looking for: ")
       found_book = self.books[isbn]
-      if isinstance(found_book, FictionBook) or isinstance(found_book, NonFictionBook):
-        print("\033[92m",{
-          'title': found_book.get_title(),
-                  'author': found_book.get_author(),
-                  'ISBN': found_book.get_isbn(),
-                  'publication_date': found_book.get_publication_date(),
-                  'is_available': found_book.get_is_available(),
-                  'genre': found_book.get_genre(),  
-                  'sub_genre': found_book.get_sub_genre()
-        }, "\033[0m")
-      else:
-          print("\033[92m",{
-          'title': found_book.get_title(),
-                  'author': found_book.get_author(),
-                  'ISBN': found_book.get_isbn(),
-                  'publication_date': found_book.get_publication_date(),
-                  'is_available': found_book.get_is_available(),
-                  'genre': '',  
-                  'sub_genre': ''
-        }, "\033[0m")
+      print("\033[92m",{
+                'title': found_book.get_title(),
+                'author': found_book.get_author(),
+                'ISBN': found_book.get_isbn(),
+                'publication_date': found_book.get_publication_date(),
+                'is_available': found_book.get_is_available(),
+                'genre': found_book.get_genre()
+      }, "\033[0m")
       
     elif search_criteria == 'title':
       title = input("Enter the title of the book you are looking for: ")
       for book in self.books.values():
         if book.get_title() == title:
-          if isinstance(book, FictionBook) or isinstance(book, NonFictionBook):
             print("\033[92m",{
                   'title': book.get_title(),
                   'author': book.get_author(),
                   'ISBN': book.get_isbn(),
                   'publication_date': book.get_publication_date(),
                   'is_available': book.get_is_available(),
-                  'genre': book.get_genre(),  
-                  'sub_genre': book.get_sub_genre()
+                  'genre': book.get_genre()
               }, "\033[0m")
-          else:
-            print("\033[92m",{
-                  'title': book.get_title(),
-                  'author': book.get_author(),
-                  'ISBN': book.get_isbn(),
-                  'publication_date': book.get_publication_date(),
-                  'is_available': book.get_is_available(),
-                  'genre': '',  
-                  'sub_genre': ''
-              }, "\033[0m")
+       
 
-  def display_available_genres(self):
-    """Displays all available sub-genres related to the books in the library."""
-    # Book class does not have genre property
-    # FictionBook and NonFictionBook have sub_genre 
-    sub_genres = []
-    for book in self.books.values():
-       if isinstance(book, FictionBook) or isinstance(book, NonFictionBook):
-         sub_genres.append(book.get_sub_genre())
-    print(f"Available Genres: {sub_genres}")
+  def display_genres(self):
+    pass
     
 
-# Adding and displaying author should be similar to user
 
 
-  #export data in the formats of text and JSON
+
+
+  #export data in binary mode and save them inside /data directory
   def export_data(self):
-    with open('books.txt', 'w') as file:
-        for isbn, book in self.books.items():
-              data = { 'title': book.get_title(), 'author': book.get_author(), 'isbn': book.get_isbn(),  'publication_date': book.get_publication_date(), 'is_available': book.get_is_available()}
-              
-              file.write(f"'{isbn}': {data}\n")
+    directory = './data'
+    file_path = os.path.join(directory, 'books.txt')
+    if not os.path.exists(directory):
+        os.makedirs(directory)
    
-
-  def import_data(self):
     
-    with open('books.txt', 'r') as file:
-       data = file.read()
- 
-       my_dict = ast.literal_eval(data)
-       self.books.update(my_dict)
-         
+    with open(file_path, 'wb') as file:
+        pickle.dump(self.books, file)
+        
+    with open('data/users.txt', 'wb') as file:   
+        pickle.dump(self.users, file)
+        
+    with open('data/authors.txt', 'wb') as file:   
+        pickle.dump(self.authors, file)
+        
+    with open('data/genres.txt', 'wb') as file:   
+        pickle.dump(self.genres, file)
+        
+    with open('data/current_loans.txt', 'wb') as file:   
+        pickle.dump(self.current_loans, file)
 
+
+  # Import data in binary mode from /data directory  convert it to dictionary 
+  def import_data(self):
+    with open('data/books.txt', 'rb') as file:
+       books_dict = pickle.load(file)
+       self.books = books_dict
+       
+    with open('data/users.txt', 'rb') as file:
+       users_dict = pickle.load(file)
+       self.users = users_dict  
+ 
+    with open('data/authors.txt', 'rb') as file:
+       authors_dict = pickle.load(file)
+       self.authors = authors_dict  
+     
+    with open('data/genres.txt', 'rb') as file:
+       genres_dict = pickle.load(file)
+       self.genres = genres_dict       
+
+    with open('data/current_loans.txt', 'rb') as file:
+       curren_loans_dict = pickle.load(file)
+       self.curren_loans = curren_loans_dict  

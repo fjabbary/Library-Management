@@ -1,13 +1,16 @@
 print("Welcome to the Library Management System!")
 
 from library import Library
+import os
+ 
+print(os.path.realpath(__file__) + '\data')
 
-def main():
+def main_app():
     library = Library()
 
     while True:
         
-        print("\n1. Add Book \n2. Display books \n3. Checkout Book \n4. Checkin Book \n5. Add User \n6. Display Users \n7. Display Borrowers \n8. Search Book ")
+        print("\n1. Add Book \n2. Display books \n3. Checkout Book \n4. Checkin Book \n5. Add User \n6. Display Users \n7. Display Borrowers \n8. Search Book \n9. Display Sub Genres \n10. Export Data \n11. Import Data ")
         choice = input("Enter your choice: ")
         
         try: 
@@ -28,7 +31,7 @@ def main():
             elif choice == "8":
                 library.search_book() 
             elif choice == "9":
-                library.display_available_genres()   
+                library.display_genres()   
             elif choice == "10":
                 library.export_data()
             elif choice == "11":
@@ -43,5 +46,5 @@ def main():
             print(f"An error occurred: {e}")
 
 if __name__ == "__main__":
-    main()
+    main_app()
 
