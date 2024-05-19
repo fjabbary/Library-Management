@@ -1,5 +1,7 @@
-import re, json, os, pickle, uuid
-from datetime import datetime
+import re, json, os, pickle, uuid, time
+from datetime import date
+from dateutil.relativedelta import relativedelta
+
 
 from book import Book
 from user import User
@@ -34,7 +36,7 @@ class Library:
         library_id: {
           'library_id': user.library_id,
           'name': user.name,
-          'borrowed_books': [x.get_title() for x in user.borrowed_books],
+          'borrowed_books': [{'title': x.get_title(), 'due_date': x.get_due_date()} for x in user.borrowed_books],
           'wait_list': [x.get_title() for x in user.wait_list],
           'notification': user.notification
         }
@@ -95,12 +97,14 @@ class Library:
     if library_id in self.users: # ony person with library id can checkout the book
       if isbn in self.books and self.books[isbn].borrow_book():
         self.current_loans[isbn] = self.users[library_id]
+        
+        # Due date set 3 months from borrowing date
+        self.books[isbn].set_due_date(str(date.today() + relativedelta(months=+3)))
         self.users[library_id].borrowed_books.append(self.books[isbn])
         print('\33[32m', f"Book {self.books[isbn].get_title()} checked out to {self.users[library_id].name}","\033[0m")
         
       elif isbn in self.books and not self.books[isbn].get_is_available():
         self.users[library_id].wait_list.append(self.books[isbn])
-        
         
         
     else:
@@ -114,17 +118,19 @@ class Library:
       if isbn in self.books and isbn in self.current_loans and library_id:
         self.books[isbn].return_book()
         self.current_loans.pop(isbn)
+        
+        for item in self.users[library_id].borrowed_books:
+            if time.strptime(item.get_due_date(),"%Y-%m-%d") < time.strptime(str(date.today()),"%Y-%m-%d"):
+              print('There will be late fee for this user')
+            
+        
         self.users[library_id].borrowed_books.remove(self.books[isbn])
       print(f"Book {self.books[isbn].get_title()} checked in")
 
       for user in self.users.values():
-    
-        print(self.books[isbn].get_title())
         for item in user.wait_list:
           if self.books[isbn].get_title() in item.get_title():
-            print('XXX')
             user.notification = f"{self.books[isbn].get_title()} book is now available"
-      
       
     except:
       print('\33[31m', f"Book with ISBN {isbn} is not in the library or has not been checked out.", "\033[0m")
@@ -230,8 +236,8 @@ class Library:
         os.makedirs(directory)
     
     try:
-      with open(file_path, 'wb') as file:
-          pickle.dump(self.books, file)
+      # with open(file_path, 'wb') as file:
+      #     pickle.dump(self.books, file)
           
       with open('data/users.txt', 'wb') as file:   
           pickle.dump(self.users, file)

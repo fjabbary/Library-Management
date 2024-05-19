@@ -1,12 +1,13 @@
 from genre import Genre
 class Book(Genre):
-  def __init__(self, title, author, ISBN, publication_date, genre_name, category):
+  def __init__(self, title, author, ISBN, publication_date, genre_name, category, due_date):
     super().__init__(genre_name, category)
     self.__title = title
     self.__author = author
     self.__ISBN = ISBN
     self.__publication_date = publication_date
     self.__is_available = True
+    self.__due_date = due_date
     
   def get_title(self):
     return self.__title
@@ -35,4 +36,9 @@ class Book(Genre):
   
   def return_book(self):
       self.set_is_available(True)
-        
+  
+  def get_due_date(self):
+      return self.__due_date
+     
+  def set_due_date(self, date):   
+      self.__due_date = date
