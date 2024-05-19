@@ -1,7 +1,7 @@
 import re, json, os, pickle, uuid, time
 from datetime import date
 from dateutil.relativedelta import relativedelta
-
+from tabulate import tabulate
 
 from book import Book
 from user import User
@@ -63,7 +63,7 @@ class Library:
     valid_date = re.match(date_regex, publication_date) 
     
     if valid_title and valid_author and valid_date:
-          new_book = Book(title, author, isbn, publication_date, genre, category)
+          new_book = Book(title, author, isbn, publication_date, genre, category, due_date="")
           self.books[isbn] = new_book
           print("\033[92m", "Book added successfully!", "\033[0m")
       
@@ -178,7 +178,7 @@ class Library:
                     'ISBN': book.get_isbn(),
                     'publication_date': book.get_publication_date(),
                     'is_available': book.get_is_available(),
-                    'genre': book.get_genre()
+                    'genre': book.get_genre_name()
                 }, "\033[0m")
     except:
       print("No resilt found")
@@ -197,6 +197,10 @@ class Library:
       one_author = { id: {'name': author.name, 'biography': author.biography} } 
       all_authors.update(one_author)
     print("\033[92m",json.dumps(all_authors, indent=4, sort_keys=True), "\033[0m")
+    # Display them in the tabular format:
+    data = [{'author': item.name, 'biography': item.biography} for item in self.authors.values()]
+    table = tabulate(data, headers="keys", tablefmt="grid")
+    print('\033[96m', table, '\033[0m')
     
 
   def display_author_details(self):
@@ -223,7 +227,7 @@ class Library:
 
   def display_genre_details(self):
     id = input("Enter the id of the genre: ")
-    one_genre = {id: {'genre_name': self.genres[id].__genre_name, 'category': self.genres[id].category }}
+    one_genre = {id: {'genre_name': self.genres[id].get_genre_name(), 'category': self.genres[id].get_category() }}
     print("\033[92m", one_genre, "\033[0m")
 
 
@@ -236,8 +240,8 @@ class Library:
         os.makedirs(directory)
     
     try:
-      # with open(file_path, 'wb') as file:
-      #     pickle.dump(self.books, file)
+      with open(file_path, 'wb') as file:
+          pickle.dump(self.books, file)
           
       with open('data/users.txt', 'wb') as file:   
           pickle.dump(self.users, file)

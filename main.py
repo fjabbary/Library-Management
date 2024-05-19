@@ -1,9 +1,6 @@
 print("Welcome to the Library Management System!")
 
 from library import Library
-import os
- 
-print(os.path.realpath(__file__) + '\data')
 
 def main_app():
     library = Library()
