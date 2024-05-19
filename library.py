@@ -121,11 +121,9 @@ class Library:
     
         print(self.books[isbn].get_title())
         for item in user.wait_list:
-          pass
-        
-        # if self.books[isbn].get_title() in user.wait_list.get_title():
-        #   print('XXX')
-        #   user.notification = f"{self.books[isbn]} is now available"
+          if self.books[isbn].get_title() in item.get_title():
+            print('XXX')
+            user.notification = f"{self.books[isbn].get_title()} book is now available"
       
       
     except:
