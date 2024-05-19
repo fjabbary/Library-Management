@@ -10,7 +10,7 @@ def main_app():
 
     while True:
         
-        print("\n1. Add Book \n2. Display books \n3. Checkout Book \n4. Checkin Book \n5. Add User \n6. Display Users \n7. Display Borrowers \n8. Search Book \n9. Display Sub Genres \n10. Export Data \n11. Import Data ")
+        print("\n1. Add Book \n2. Display books \n3. Checkout Book \n4. Checkin Book \n5. Add User \n6. Display Users \n7. Display Borrowers \n8. Search Book \n9. Add Author \n10. Display Authors \n11. Display Author details \n12. Add Genre \n13. Displays Genres \n14. Display Genre Details \n15. Export Data \n16. Import Data \n17. exit ")
         choice = input("Enter your choice: ")
         
         try: 
@@ -31,11 +31,23 @@ def main_app():
             elif choice == "8":
                 library.search_book() 
             elif choice == "9":
-                library.display_genres()   
+                library.add_author() 
             elif choice == "10":
-                library.export_data()
+                library.display_authors()
             elif choice == "11":
-                library.import_data()         
+                library.display_author_details()
+            elif choice == "12":
+                library.add_genre()
+            elif choice == "13":
+                library.display_genres()
+            elif choice == "14":
+                library.display_genre_details()
+            elif choice == "15":
+                library.export_data()
+            elif choice == "16":
+                library.import_data()
+            elif choice == "17":
+                exit()
                 
             elif choice == "":
                 print("Thanks for supporting your public Library! Have a nice day :)")

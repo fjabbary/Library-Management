@@ -1,10 +1,10 @@
-import ast, re, json, os
+import re, json, os, pickle, uuid
 from datetime import datetime
-import pickle
 
 from book import Book
 from user import User
 from author import Author
+from genre import Genre
 
 class Library:
   def __init__(self):
@@ -18,10 +18,6 @@ class Library:
     user_name = input("Enter the user name: ")
     library_id = input("What is the user library id? ")
     
-    if not library_id or not user_name:
-      print("User name and library Id is required")
-      exit()
-    
     if library_id not in self.users:
       user = User(user_name, library_id)
       self.users[library_id] = user
@@ -31,16 +27,22 @@ class Library:
       print('\033[91m', f"User with library id of {library_id} already exists", '\033[0m')
     
     
-    
   def display_users(self):
+    output = {}
     for library_id, user in self.users.items():
-      print('\33[33m', {
+      one_user = {
         library_id: {
           'library_id': user.library_id,
           'name': user.name,
-          'borrowed_books': [x.get_title() for x in user.borrowed_books]
+          'borrowed_books': [x.get_title() for x in user.borrowed_books],
+          'wait_list': [x.get_title() for x in user.wait_list],
+          'notification': user.notification
         }
-      },"\033[0m")
+      }
+      
+      output.update(one_user)
+    print("\033[92m",json.dumps(output, indent=4, sort_keys=True), "\033[0m")
+      
       
     
   def add_book(self):
@@ -49,6 +51,7 @@ class Library:
     isbn = input("Enter the ISBN number of the book: ")
     publication_date = input("Enter the publication date in the format of MM/DD/YYYY: ")
     genre = input("Enter the genre of the book: ")
+    category = input("Enter the category of the book. 'Fiction' or 'Non-fiction': ")
     
     string_regex = r"[a-zA-Z0-9 .]{3,}"
     date_regex = r"\d{2}/\d{2}/\d{3,4}"
@@ -58,7 +61,7 @@ class Library:
     valid_date = re.match(date_regex, publication_date) 
     
     if valid_title and valid_author and valid_date:
-          new_book = Book(title, author, isbn, publication_date, genre)
+          new_book = Book(title, author, isbn, publication_date, genre, category)
           self.books[isbn] = new_book
           print("\033[92m", "Book added successfully!", "\033[0m")
       
@@ -76,7 +79,8 @@ class Library:
                 'ISBN': book.get_isbn(),
                 'publication_date': book.get_publication_date(),
                 'is_available': book.get_is_available(),
-                'genre': book.get_genre()
+                'genre': book.get_genre_name(),
+                'category': book.get_category()
             }
           }
           output.update(one_book)
@@ -88,13 +92,19 @@ class Library:
   def checkout_book(self):
     isbn = input("Enter the ISBN of the book to borrow: ")
     library_id = input("What is the user's id? ")
-    if library_id in self.users:
+    if library_id in self.users: # ony person with library id can checkout the book
       if isbn in self.books and self.books[isbn].borrow_book():
         self.current_loans[isbn] = self.users[library_id]
         self.users[library_id].borrowed_books.append(self.books[isbn])
         print('\33[32m', f"Book {self.books[isbn].get_title()} checked out to {self.users[library_id].name}","\033[0m")
+        
+      elif isbn in self.books and not self.books[isbn].get_is_available():
+        self.users[library_id].wait_list.append(self.books[isbn])
+        
+        
+        
     else:
-      print('\33[31m', f"User with id of {library_id} is not a member. Please add this user.", "\033[0m")
+      print('\33[31m', f"User with id of {library_id} is not a member or book is not available.", "\033[0m")
 
    
   def checkin_book(self):
@@ -106,54 +116,111 @@ class Library:
         self.current_loans.pop(isbn)
         self.users[library_id].borrowed_books.remove(self.books[isbn])
       print(f"Book {self.books[isbn].get_title()} checked in")
+
+      for user in self.users.values():
+    
+        print(self.books[isbn].get_title())
+        for item in user.wait_list:
+          pass
+        
+        # if self.books[isbn].get_title() in user.wait_list.get_title():
+        #   print('XXX')
+        #   user.notification = f"{self.books[isbn]} is now available"
+      
+      
     except:
       print('\33[31m', f"Book with ISBN {isbn} is not in the library or has not been checked out.", "\033[0m")
   
   
+  # Displays books and relevant users that borrowed the books
   def display_borrower_users(self):
+    output = {}
     for library_id, user in self.current_loans.items():
-      print('\33[33m', {
+      one_book_user = {
         library_id: {
           'library_id': user.library_id,
           'name': user.name
         }
-      },"\033[0m")
+      }
+      output.update(one_book_user)
+    
+    print("\033[92m",json.dumps(output, indent=4, sort_keys=True), "\033[0m")
     
 
 
   def search_book(self):
-    search_criteria = input("Do you want to search based on 'isbn' or 'title'? ")
-    if search_criteria == 'isbn':
-      isbn = input("Enter the ISBN of the book you are looking for: ")
-      found_book = self.books[isbn]
-      print("\033[92m",{
-                'title': found_book.get_title(),
-                'author': found_book.get_author(),
-                'ISBN': found_book.get_isbn(),
-                'publication_date': found_book.get_publication_date(),
-                'is_available': found_book.get_is_available(),
-                'genre': found_book.get_genre()
-      }, "\033[0m")
-      
-    elif search_criteria == 'title':
-      title = input("Enter the title of the book you are looking for: ")
-      for book in self.books.values():
-        if book.get_title() == title:
-            print("\033[92m",{
-                  'title': book.get_title(),
-                  'author': book.get_author(),
-                  'ISBN': book.get_isbn(),
-                  'publication_date': book.get_publication_date(),
-                  'is_available': book.get_is_available(),
-                  'genre': book.get_genre()
-              }, "\033[0m")
-       
+    try:
+      search_criteria = input("Do you want to search based on 'isbn' or 'title'? ")
+      if search_criteria == 'isbn':
+        isbn = input("Enter the ISBN of the book you are looking for: ")
+        found_book = self.books[isbn]
+        print("\033[92m",{
+                  'title': found_book.get_title(),
+                  'author': found_book.get_author(),
+                  'ISBN': found_book.get_isbn(),
+                  'publication_date': found_book.get_publication_date(),
+                  'is_available': found_book.get_is_available(),
+                  'genre': found_book.get_genre_name()
+        }, "\033[0m")
+        
+      elif search_criteria == 'title':
+        title = input("Enter the title of the book you are looking for: ")
+        for book in self.books.values():
+          # Find book even if search query partially matches with the title of the book
+          if title.lower() in book.get_title().lower():
+              print("\033[92m",{
+                    'title': book.get_title(),
+                    'author': book.get_author(),
+                    'ISBN': book.get_isbn(),
+                    'publication_date': book.get_publication_date(),
+                    'is_available': book.get_is_available(),
+                    'genre': book.get_genre()
+                }, "\033[0m")
+    except:
+      print("No resilt found")
 
-  def display_genres(self):
-    pass
+  def add_author(self):
+    id = str(uuid.uuid4())
+    name = input("Enter the name of the author: ")
+    biography = input("Enter biography: ")
+    author = Author(name, biography)
+    self.authors[id] = author
+    
+    
+  def display_authors(self):
+    all_authors = {}
+    for id, author in self.authors.items():
+      one_author = { id: {'name': author.name, 'biography': author.biography} } 
+      all_authors.update(one_author)
+    print("\033[92m",json.dumps(all_authors, indent=4, sort_keys=True), "\033[0m")
     
 
+  def display_author_details(self):
+    id = input("Enter the id of the author: ")
+    one_author = {id: {'name': self.authors[id].name, 'biography': self.authors[id].biography }}
+    print("\033[92m", one_author, "\033[0m")
+  
+  
+  def add_genre(self):
+    id = str(uuid.uuid4())
+    name = input("Enter the genre: ")
+    category = input("Enter category. 'Fiction' or 'Non-fiction': ")
+    genre = Genre(name, category)
+    self.genres[id] = genre
+  
+    
+  def display_genres(self):
+    all_genres = {}
+    for id, genre in self.genres.items():
+      one_genre = { id: {'name': genre.get_genre_name(), 'category': genre.get_category()} } 
+      all_genres.update(one_genre)
+    print("\033[92m",json.dumps(all_genres, indent=4, sort_keys=True), "\033[0m")
 
+
+  def display_genre_details(self):
+    id = input("Enter the id of the genre: ")
+    one_genre = {id: {'genre_name': self.genres[id].__genre_name, 'category': self.genres[id].category }}
+    print("\033[92m", one_genre, "\033[0m")
 
 
 
@@ -163,22 +230,24 @@ class Library:
     file_path = os.path.join(directory, 'books.txt')
     if not os.path.exists(directory):
         os.makedirs(directory)
-   
     
-    with open(file_path, 'wb') as file:
-        pickle.dump(self.books, file)
-        
-    with open('data/users.txt', 'wb') as file:   
-        pickle.dump(self.users, file)
-        
-    with open('data/authors.txt', 'wb') as file:   
-        pickle.dump(self.authors, file)
-        
-    with open('data/genres.txt', 'wb') as file:   
-        pickle.dump(self.genres, file)
-        
-    with open('data/current_loans.txt', 'wb') as file:   
-        pickle.dump(self.current_loans, file)
+    try:
+      with open(file_path, 'wb') as file:
+          pickle.dump(self.books, file)
+          
+      with open('data/users.txt', 'wb') as file:   
+          pickle.dump(self.users, file)
+          
+      with open('data/authors.txt', 'wb') as file:   
+          pickle.dump(self.authors, file)
+          
+      with open('data/genres.txt', 'wb') as file:   
+          pickle.dump(self.genres, file)
+          
+      with open('data/current_loans.txt', 'wb') as file:   
+          pickle.dump(self.current_loans, file)
+    except:
+      print("Error while exporting data")
 
 
   # Import data in binary mode from /data directory  convert it to dictionary 

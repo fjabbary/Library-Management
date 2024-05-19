@@ -1,10 +1,11 @@
-class Book():
-  def __init__(self, title, author, ISBN, publication_date, genre):
+from genre import Genre
+class Book(Genre):
+  def __init__(self, title, author, ISBN, publication_date, genre_name, category):
+    super().__init__(genre_name, category)
     self.__title = title
     self.__author = author
     self.__ISBN = ISBN
     self.__publication_date = publication_date
-    self.__genre = genre
     self.__is_available = True
     
   def get_title(self):
@@ -18,9 +19,6 @@ class Book():
   
   def get_publication_date(self):
     return self.__publication_date
-  
-  def get_genre(self):
-    return self.__genre
   
   def get_is_available(self):
     return self.__is_available

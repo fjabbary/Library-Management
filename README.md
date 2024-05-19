@@ -54,17 +54,28 @@ display_borrower_users(): Displays all currently borrowed books.
 These classes represent books in the library.
 
 **Book:** Represents a general book.
-**FictionBook:** Represents a fiction book.
-**NonFictionBook:** Represents a non-fiction book.
+
 **User**
 This class represents a user of the library.
 
 **User:** Represents a library user with attributes like name, library ID, and borrowed books.
-**Author**
-This class represents an author in the library system.
+**Author** This class represents an author in the library system.
 
-Author: Represents an author with attributes like name and a list of books they've written.
+**Genre**: Class representing a genre.
 
 # Note: 
 Please note that library_id should be registered in order to be able to checkout the book
 The code for adding and displaying the author should be similar to user.
+
+# Requirements
+Python 3.x
+Modules: re, json, os, pickle, uuid, datetime
+
+# Data Export/Import
+Data is exported to and imported from the /data directory in binary mode using the pickle module. The following data is managed:
+
+books.txt: Book data
+users.txt: User data
+authors.txt: Author data
+genres.txt: Genre data
+current_loans.txt: Current loans data

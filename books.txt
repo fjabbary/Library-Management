@@ -1,1 +1,0 @@
-{'3r2dq': {'title': 'dascaw', 'author': '324f2', 'isbn': '3r2dq', 'publication_date': '03/03/2222', 'is_available': True},'qawr2': {'title': 'dascxar65', 'author': '32q2', 'isbn': 'qawr2', 'publication_date': '02/20/1111', 'is_available': True},}
